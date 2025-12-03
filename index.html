@@ -352,10 +352,20 @@
 
             if(!dateStr) return;
             
+            // --- BLINDAGEM NO FRONTEND PARA CELULARES ---
+            // Verifica se a data selecionada é anterior a hoje (YYYY-MM-DD)
+            const todayStr = new Date().toLocaleDateString('pt-BR', {year:'numeric', month:'2-digit', day:'2-digit'}).split('/').reverse().join('-');
+            
+            if (dateStr < todayStr) {
+                slotsDiv.innerHTML = '<p class="col-span-4 text-center text-red-500 text-xs py-2 bg-red-50 rounded font-bold">Data Inválida (Passado)</p>';
+                container.classList.remove('hidden');
+                return; // Para aqui, não chama o servidor
+            }
+            // ---------------------------------------------
+
             container.classList.remove('hidden');
             slotsDiv.innerHTML = '<div class="col-span-4 text-center"><div class="loader mx-auto"></div></div>';
             
-            // Backend já configurado para rejeitar passados
             const slots = await callApi('getAvailableSlots', { dateString: dateStr });
             
             if (slots.length === 0) slotsDiv.innerHTML = '<p class="col-span-4 text-center text-xs text-gray-400 py-2">Sem horários disponíveis.</p>';
