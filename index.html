@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html><!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <base target="_top">
@@ -15,28 +15,23 @@
         :root { --theme-color: #0f172a; }
         body { font-family: 'Roboto', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
         
-        .fade-in { animation: fadeIn 0.4s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         
-        /* Loader Genérico */
         .loader { border: 3px solid #e2e8f0; border-radius: 50%; border-top: 3px solid var(--theme-color); width: 30px; height: 30px; animation: spin 0.8s linear infinite; }
-        
-        /* Loader do Botão (Branco) */
         .btn-loader { border: 3px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top: 3px solid #ffffff; width: 20px; height: 20px; animation: spin 0.8s linear infinite; display: inline-block; }
         
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* APLICAR COR DO TEMA COM PRIORIDADE */
         .theme-bg { background-color: var(--theme-color) !important; }
         .theme-text { color: var(--theme-color) !important; }
         .theme-ring:focus { ring-color: var(--theme-color); box-shadow: 0 0 0 2px var(--theme-color); }
-        
-        /* Cor do hover nos botões de horário não selecionados */
-        .slot-btn:hover:not(.theme-bg) { background-color: #e2e8f0; }
-
         .admin-tab-active { border-bottom: 3px solid var(--theme-color); color: var(--theme-color); font-weight: 700; }
         .admin-tab-inactive { color: #64748b; }
         .modal-backdrop { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); }
+        
+        /* Correção para inputs não vazarem a tela */
+        input, select, textarea { max-width: 100%; }
 
         @media print {
             body * { visibility: hidden; }
@@ -106,7 +101,7 @@
 
                 <div id="form-errors" class="text-red-500 text-sm text-center hidden"></div>
 
-                <button type="submit" id="submit-booking-btn" class="w-full bg-gray-400 text-white font-bold py-4 rounded-xl shadow-lg transform transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <button type="submit" id="submit-booking-btn" class="w-full bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-slate-900 transform transition disabled:opacity-50 disabled:cursor-not-allowed theme-bg" disabled>
                     Confirmar Agendamento
                 </button>
             </form>
@@ -239,6 +234,29 @@
 
     <a id="float-support-btn" href="#" target="_blank" class="hidden fixed bottom-4 right-4 bg-green-500 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition z-50 animate-bounce"><i class="fab fa-whatsapp fa-2x"></i></a>
 
+    <!-- CUSTOM ALERT MODAL -->
+    <div id="custom-alert" class="hidden fixed inset-0 modal-backdrop z-[60] flex items-center justify-center p-4 fade-in">
+        <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl text-center relative">
+            <div id="alert-icon" class="w-16 h-16 rounded-full flex items-center justify-center mb-4 mx-auto text-3xl"></div>
+            <h3 id="alert-title" class="text-xl font-bold text-gray-800 mb-2"></h3>
+            <p id="alert-message" class="text-gray-600 mb-6 text-sm"></p>
+            <button onclick="closeCustomAlert()" class="w-full py-2.5 rounded-lg font-bold transition theme-bg text-white hover:opacity-90">OK</button>
+        </div>
+    </div>
+
+    <!-- CUSTOM CONFIRM MODAL -->
+    <div id="custom-confirm" class="hidden fixed inset-0 modal-backdrop z-[60] flex items-center justify-center p-4 fade-in">
+        <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl text-center relative">
+            <div class="w-16 h-16 bg-yellow-100 text-yellow-500 rounded-full flex items-center justify-center mb-4 mx-auto text-3xl"><i class="fas fa-exclamation-triangle"></i></div>
+            <h3 id="confirm-title" class="text-xl font-bold text-gray-800 mb-2"></h3>
+            <p id="confirm-message" class="text-gray-600 mb-6 text-sm"></p>
+            <div class="flex gap-3">
+                <button onclick="closeCustomConfirm(false)" class="flex-1 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-bold hover:bg-gray-300 transition">Cancelar</button>
+                <button id="confirm-yes-btn" class="flex-1 py-2.5 theme-bg text-white rounded-lg font-bold hover:opacity-90 transition">Sim</button>
+            </div>
+        </div>
+    </div>
+
     <div id="printable-area" class="hidden">
         <div class="text-center border-b pb-4 mb-4">
             <h1 id="print-header-title" class="text-2xl font-bold text-gray-800">Relatório</h1>
@@ -259,6 +277,48 @@
         let currentDateOffset = new Date();
         let isDashboardLoading = false; 
         let currentRequestDate = null; 
+        let confirmCallback = null;
+
+        // --- SISTEMA DE ALERTAS CUSTOMIZADOS ---
+        function showCustomAlert(title, message, type = 'success') {
+            const el = document.getElementById('custom-alert');
+            const iconEl = document.getElementById('alert-icon');
+            
+            document.getElementById('alert-title').textContent = title;
+            document.getElementById('alert-message').textContent = message;
+            
+            if(type === 'success') {
+                iconEl.className = 'w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mb-4 mx-auto text-3xl';
+                iconEl.innerHTML = '<i class="fas fa-check"></i>';
+            } else if(type === 'error') {
+                iconEl.className = 'w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-4 mx-auto text-3xl';
+                iconEl.innerHTML = '<i class="fas fa-times"></i>';
+            }
+            
+            el.classList.remove('hidden');
+        }
+
+        function closeCustomAlert() {
+            document.getElementById('custom-alert').classList.add('hidden');
+        }
+
+        function showCustomConfirm(title, message, callback) {
+            const el = document.getElementById('custom-confirm');
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-message').textContent = message;
+            confirmCallback = callback;
+            el.classList.remove('hidden');
+        }
+
+        function closeCustomConfirm(isConfirmed) {
+            document.getElementById('custom-confirm').classList.add('hidden');
+            if(isConfirmed && confirmCallback) {
+                confirmCallback();
+            }
+            confirmCallback = null;
+        }
+        
+        document.getElementById('confirm-yes-btn').onclick = () => closeCustomConfirm(true);
 
         async function callApi(action, params = {}) {
             try {
@@ -408,9 +468,9 @@
             let html = '';
             fields.forEach(f => {
                 const val = appSettings[f.k] || '';
-                if(f.t === 'textarea') html += `<div><label class="text-xs font-bold text-gray-500">${f.l}</label><textarea name="${f.k}" class="w-full border rounded p-2 text-sm bg-gray-50 h-20 theme-ring">${val}</textarea></div>`;
+                if(f.t === 'textarea') html += `<div><label class="text-xs font-bold text-gray-500">${f.l}</label><textarea name="${f.k}" class="w-full max-w-full border rounded p-2 text-sm bg-gray-50 h-20 theme-ring">${val}</textarea></div>`;
                 else if(f.t === 'color') html += `<div><label class="text-xs font-bold text-gray-500">${f.l}</label><div class="flex gap-2"><input type="color" name="${f.k}" value="${val}" class="h-9 w-12 rounded"><input type="text" value="${val}" class="flex-1 border rounded p-2 text-sm bg-gray-50 theme-ring" readonly></div></div>`;
-                else html += `<div><label class="text-xs font-bold text-gray-500">${f.l}</label><input type="${f.t||'text'}" name="${f.k}" value="${val}" class="w-full border rounded p-2 text-sm bg-gray-50 theme-ring"></div>`;
+                else html += `<div><label class="text-xs font-bold text-gray-500">${f.l}</label><input type="${f.t||'text'}" name="${f.k}" value="${val}" class="w-full max-w-full border rounded p-2 text-sm bg-gray-50 theme-ring"></div>`;
             });
             const blockedDays = (appSettings.blockedWeekdays || '').split(',').map(d => d.trim());
             const days = ['D','S','T','Q','Q','S','S']; 
@@ -424,9 +484,14 @@
                 const formData = new FormData(form);
                 const newS = {};
                 formData.forEach((v,k) => newS[k] = v);
-                await callApi('updateAppSettings', { newSettings: newS });
-                alert("Salvo!");
-                location.reload();
+                try {
+                    await callApi('updateAppSettings', { newSettings: newS });
+                    showCustomAlert('Sucesso', 'Configurações salvas!');
+                    setTimeout(() => location.reload(), 1500);
+                } catch(e) {
+                    showCustomAlert('Erro', 'Falha ao salvar.', 'error');
+                    btn.innerHTML = 'Salvar Tudo'; btn.disabled = false;
+                }
             };
         }
 
@@ -439,13 +504,12 @@
             btn.disabled = true;
             callApi('checkAdminLogin', {credentials:{username:u, password:p}}).then(res => {
                 if(res.success) { showScreen('admin-panel-screen'); currentPeriodType = 'monthly'; loadDashboard(); } 
-                else { alert(res.message); }
+                else { showCustomAlert('Acesso Negado', res.message, 'error'); }
                 btn.innerHTML = originalText; btn.disabled = false;
             });
         }
 
         function selectTime(btn, time) {
-            // CORREÇÃO: Remove classes genéricas e força a theme-bg
             document.querySelectorAll('.slot-btn').forEach(b => { 
                 b.classList.remove('theme-bg', 'text-white'); 
                 b.classList.add('bg-gray-100', 'text-gray-700'); 
@@ -472,7 +536,10 @@
                 document.getElementById('confirm-date').textContent = `${d[2]}/${d[1]}/${d[0]}`;
                 document.getElementById('confirm-time').textContent = data.time;
                 document.getElementById('confirmation-screen').classList.remove('hidden');
-            } else { alert(res.message); btn.innerHTML = 'Confirmar Agendamento'; btn.disabled = false; }
+            } else { 
+                showCustomAlert('Erro', res.message, 'error'); 
+                btn.innerHTML = 'Confirmar Agendamento'; btn.disabled = false; 
+            }
         }
 
         function renderChart(labels, values) {
@@ -486,7 +553,7 @@
         }
 
         function preparePrint() {
-            if (!currentDashboardData || !currentDashboardData.appointments) return alert("Nada para imprimir.");
+            if (!currentDashboardData || !currentDashboardData.appointments) return showCustomAlert('Aviso', 'Nada para imprimir.', 'error');
             const tbody = document.getElementById('print-table-body');
             document.getElementById('print-header-subtitle').textContent = currentDashboardData.periodInfo ? `Período: ${currentDashboardData.periodInfo.start} a ${currentDashboardData.periodInfo.end}` : "Relatório";
             tbody.innerHTML = currentDashboardData.appointments.map(a => `<tr class="bg-white border-b"><td class="px-2 py-2 font-medium text-gray-900">${a.date} ${a.time}</td><td class="px-2 py-2">${a.name}</td><td class="px-2 py-2">${a.phone}</td><td class="px-2 py-2"><span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">Confirmado</span></td></tr>`).join('');
@@ -507,10 +574,22 @@
             const time = document.getElementById('block-time').value;
             await callApi('addBlock', { blockData: { date, time } });
             document.getElementById('block-form').reset(); loadBlocks();
+            showCustomAlert('Sucesso', 'Bloqueio adicionado!');
         }
 
-        async function removeBlock(row) { if(!confirm("Remover?")) return; await callApi('deleteBlock', { rowNumber: row }); loadBlocks(); }
-        async function deleteAppt(id) { if(!confirm("Excluir?")) return; await callApi('deleteAppointment', { appointmentId: id }); loadDashboard(); }
+        async function removeBlock(row) { 
+            showCustomConfirm('Remover Bloqueio', 'Tem certeza que deseja remover este bloqueio?', async () => {
+                await callApi('deleteBlock', { rowNumber: row }); 
+                loadBlocks();
+            });
+        }
+        
+        async function deleteAppt(id) { 
+            showCustomConfirm('Excluir Agendamento', 'Tem certeza que deseja excluir?', async () => {
+                await callApi('deleteAppointment', { appointmentId: id }); 
+                loadDashboard();
+            });
+        }
 
         function showScreen(id) {
             ['form-screen', 'confirmation-screen', 'login-screen', 'admin-panel-screen'].forEach(s => document.getElementById(s).classList.add('hidden'));
