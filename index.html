@@ -99,10 +99,6 @@
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Data do Agendamento</label>
                     <input type="date" id="bookingDate" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none theme-ring transition" required>
-                    <div id="admin-date-override" class="hidden mt-2 flex items-center gap-2 bg-yellow-50 p-2 rounded border border-yellow-200">
-                         <input type="checkbox" id="allow-past-date" class="w-4 h-4 text-blue-600 rounded" onchange="toggleDateRestriction()">
-                         <label for="allow-past-date" class="text-xs text-yellow-700 font-bold">Modo Admin: Permitir datas e horários passados</label>
-                    </div>
                 </div>
 
                 <div id="slots-container" class="hidden fade-in">
@@ -199,18 +195,18 @@
                     
                     <!-- NAVEGAÇÃO DE DATA -->
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-                        <button onclick="changePeriod(-1)" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition"><i class="fas fa-chevron-left"></i></button>
+                        <button onclick="changePeriod(-1)" class="nav-btn w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition"><i class="fas fa-chevron-left"></i></button>
                         <div class="text-center">
                             <p class="text-xs text-gray-400 font-bold uppercase tracking-wide">Período</p>
                             <p id="current-period-display" class="font-bold text-lg text-slate-800">Carregando...</p>
                         </div>
-                        <button onclick="changePeriod(1)" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition"><i class="fas fa-chevron-right"></i></button>
+                        <button onclick="changePeriod(1)" class="nav-btn w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition"><i class="fas fa-chevron-right"></i></button>
                     </div>
 
-                    <!-- CARD DE TOTAIS (Removido o Faturamento para limpeza) -->
+                    <!-- CARD DE TOTAIS -->
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
                         <div>
-                            <span class="text-xs text-gray-400 uppercase font-bold">Agendamentos</span>
+                            <span class="text-xs text-gray-400 uppercase font-bold">Total Agendamentos</span>
                             <h3 id="dash-total" class="text-3xl font-bold text-slate-800 mt-1">-</h3>
                         </div>
                         <div class="text-right">
@@ -302,7 +298,8 @@
         
         let appSettings = {}, selectedTime = null, adminChart = null, currentDashboardData = null;
         let currentPeriodType = 'daily';
-        let currentDateOffset = new Date(); // Data de referência para navegação
+        let currentDateOffset = new Date();
+        let isDashboardLoading = false; 
 
         async function callApi(action, params = {}) {
             try {
@@ -352,39 +349,30 @@
             const dateStr = document.getElementById('bookingDate').value;
             const slotsDiv = document.getElementById('time-slots');
             const container = document.getElementById('slots-container');
-            const isAdminMode = document.getElementById('allow-past-date').checked;
 
             if(!dateStr) return;
             
             container.classList.remove('hidden');
             slotsDiv.innerHTML = '<div class="col-span-4 text-center"><div class="loader mx-auto"></div></div>';
             
-            const slots = await callApi('getAvailableSlots', { dateString: dateStr, isAdmin: isAdminMode });
+            // Backend já configurado para rejeitar passados
+            const slots = await callApi('getAvailableSlots', { dateString: dateStr });
             
             if (slots.length === 0) slotsDiv.innerHTML = '<p class="col-span-4 text-center text-xs text-gray-400 py-2">Sem horários disponíveis.</p>';
             else slotsDiv.innerHTML = slots.map(t => `<button type="button" onclick="selectTime(this, '${t}')" class="slot-btn py-2 bg-gray-100 hover:bg-slate-200 rounded text-sm font-bold text-gray-700 transition">${t}</button>`).join('');
         }
 
-        function toggleDateRestriction() {
-            const chk = document.getElementById('allow-past-date');
-            const input = document.getElementById('bookingDate');
-            if (chk.checked) {
-                input.removeAttribute('min');
-                alert("Modo Admin Ativo: Datas e horários passados agora aparecerão na lista.");
-            } else {
-                input.min = new Date().toISOString().split('T')[0];
-            }
-            if(input.value) fetchAvailableSlots();
-        }
-
         // --- NAVEGAÇÃO E DASHBOARD ---
         function setPeriodType(type) {
+            if (isDashboardLoading) return;
             currentPeriodType = type;
-            currentDateOffset = new Date(); // Reset para hoje ao trocar tipo
+            currentDateOffset = new Date(); 
             loadDashboard();
         }
 
         function changePeriod(direction) {
+            if (isDashboardLoading) return;
+            
             if (currentPeriodType === 'daily') {
                 currentDateOffset.setDate(currentDateOffset.getDate() + direction);
             } else if (currentPeriodType === 'weekly') {
@@ -396,48 +384,54 @@
         }
 
         async function loadDashboard() {
-            // UI Update Buttons
+            isDashboardLoading = true;
+            
+            // Bloqueia botões visualmente
+            document.querySelectorAll('.nav-btn, .period-btn').forEach(btn => btn.classList.add('opacity-50', 'cursor-not-allowed'));
+
             document.querySelectorAll('.period-btn').forEach(b => {
                 if(b.dataset.type === currentPeriodType) b.classList.add('bg-slate-800', 'text-white');
                 else b.classList.remove('bg-slate-800', 'text-white');
             });
 
-            // Format Date for API (YYYY-MM-DD)
             const dateStr = currentDateOffset.toISOString().split('T')[0];
-            
             const listDiv = document.getElementById('dashboard-list');
             listDiv.innerHTML = '<div class="flex justify-center py-8"><div class="loader"></div></div>';
             
-            const data = await callApi('getAdminDashboardData', { period: currentPeriodType, dateReference: dateStr });
-            currentDashboardData = data; 
-            
-            // Update Headers
-            document.getElementById('dash-total').textContent = data.count || 0;
-            if(data.periodInfo) {
-                if(currentPeriodType === 'daily') document.getElementById('current-period-display').textContent = data.periodInfo.start;
-                else document.getElementById('current-period-display').textContent = `${data.periodInfo.start} - ${data.periodInfo.end}`;
-            }
+            try {
+                const data = await callApi('getAdminDashboardData', { period: currentPeriodType, dateReference: dateStr });
+                currentDashboardData = data; 
+                
+                document.getElementById('dash-total').textContent = data.count || 0;
+                if(data.periodInfo) {
+                    if(currentPeriodType === 'daily') document.getElementById('current-period-display').textContent = data.periodInfo.start;
+                    else document.getElementById('current-period-display').textContent = `${data.periodInfo.start} - ${data.periodInfo.end}`;
+                }
 
-            // List
-            if (!data.appointments || data.appointments.length === 0) listDiv.innerHTML = '<p class="text-center text-gray-400 py-8 text-sm">Nenhum agendamento.</p>';
-            else {
-                listDiv.innerHTML = data.appointments.map(a => {
-                    const appData = JSON.stringify(a).replace(/"/g, '&quot;');
-                    return `
-                    <div class="px-4 py-3 flex justify-between items-center hover:bg-gray-50 border-b border-gray-50">
-                        <div><p class="font-bold text-slate-800 text-sm">${a.date} - ${a.time}</p><p class="text-xs text-gray-500 uppercase">${a.name}</p></div>
-                        <div class="flex gap-2">
-                            <button onclick='sendReminder(${appData})' class="w-8 h-8 rounded bg-green-100 text-green-600 flex items-center justify-center text-xs" title="Enviar Lembrete WhatsApp"><i class="fab fa-whatsapp"></i></button>
-                            <button onclick="deleteAppt('${a.id}')" class="w-8 h-8 rounded bg-red-100 text-red-600 flex items-center justify-center text-xs"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>`;
-                }).join('');
-            }
+                if (!data.appointments || data.appointments.length === 0) listDiv.innerHTML = '<p class="text-center text-gray-400 py-8 text-sm">Nenhum agendamento.</p>';
+                else {
+                    listDiv.innerHTML = data.appointments.map(a => {
+                        const appData = JSON.stringify(a).replace(/"/g, '&quot;');
+                        return `
+                        <div class="px-4 py-3 flex justify-between items-center hover:bg-gray-50 border-b border-gray-50">
+                            <div><p class="font-bold text-slate-800 text-sm">${a.date} - ${a.time}</p><p class="text-xs text-gray-500 uppercase">${a.name}</p></div>
+                            <div class="flex gap-2">
+                                <button onclick='sendReminder(${appData})' class="w-8 h-8 rounded bg-green-100 text-green-600 flex items-center justify-center text-xs" title="Enviar WhatsApp"><i class="fab fa-whatsapp"></i></button>
+                                <button onclick="deleteAppt('${a.id}')" class="w-8 h-8 rounded bg-red-100 text-red-600 flex items-center justify-center text-xs"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>`;
+                    }).join('');
+                }
 
-            // Chart
-            const chartWrapper = document.getElementById('chart-wrapper');
-            if (currentPeriodType === 'daily') chartWrapper.classList.add('hidden');
-            else { chartWrapper.classList.remove('hidden'); renderChart(data.chart.labels, data.chart.data); }
+                const chartWrapper = document.getElementById('chart-wrapper');
+                if (currentPeriodType === 'daily') chartWrapper.classList.add('hidden');
+                else { chartWrapper.classList.remove('hidden'); renderChart(data.chart.labels, data.chart.data); }
+            } catch (e) {
+                listDiv.innerHTML = '<p class="text-red-500 text-center">Erro ao carregar dados.</p>';
+            } finally {
+                isDashboardLoading = false;
+                document.querySelectorAll('.nav-btn, .period-btn').forEach(btn => btn.classList.remove('opacity-50', 'cursor-not-allowed'));
+            }
         }
 
         function sendReminder(app) {
@@ -513,10 +507,9 @@
             callApi('checkAdminLogin', {credentials:{username:u, password:p}}).then(res => {
                 if(res.success) { 
                     showScreen('admin-panel-screen'); 
-                    // Inicia dashboard no Mês Atual para visualização mais rica
+                    // Inicia dashboard no Mês Atual
                     currentPeriodType = 'monthly';
                     loadDashboard();
-                    document.getElementById('admin-date-override').classList.remove('hidden');
                 } else {
                     alert(res.message);
                 }
