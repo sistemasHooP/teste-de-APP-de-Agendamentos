@@ -1,4 +1,4 @@
-<!DOCTYPE html><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <base target="_top">
@@ -16,7 +16,7 @@
         body { font-family: 'Roboto', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
         
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
         
         .loader { border: 3px solid #e2e8f0; border-radius: 50%; border-top: 3px solid var(--theme-color); width: 30px; height: 30px; animation: spin 0.8s linear infinite; }
         .btn-loader { border: 3px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top: 3px solid #ffffff; width: 20px; height: 20px; animation: spin 0.8s linear infinite; display: inline-block; }
@@ -26,12 +26,20 @@
         .theme-bg { background-color: var(--theme-color) !important; }
         .theme-text { color: var(--theme-color) !important; }
         .theme-ring:focus { ring-color: var(--theme-color); box-shadow: 0 0 0 2px var(--theme-color); }
+        
         .admin-tab-active { border-bottom: 3px solid var(--theme-color); color: var(--theme-color); font-weight: 700; }
         .admin-tab-inactive { color: #64748b; }
         .modal-backdrop { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); }
         
-        /* Correção para inputs não vazarem a tela */
-        input, select, textarea { max-width: 100%; }
+        /* CORREÇÃO CRÍTICA PARA CELULAR: Inputs não vazarem a tela */
+        input, select, textarea { 
+            max-width: 100%; 
+            box-sizing: border-box; 
+        }
+        /* Ajuste de padding nos inputs para telas pequenas */
+        @media (max-width: 640px) {
+            input, select, textarea { padding-left: 0.75rem; padding-right: 0.75rem; }
+        }
 
         @media print {
             body * { visibility: hidden; }
@@ -53,7 +61,7 @@
         <!-- TELA CLIENTE -->
         <div id="form-screen" class="fade-in flex-grow flex flex-col">
             <div class="relative h-40 bg-gray-200 overflow-hidden shrink-0">
-                <div id="cover-photo" class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://placehold.co/600x200/0f172a/FFFFFF?text=Prefeitura');"></div>
+                <div id="cover-photo" class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://placehold.co/600x200/0f172a/FFFFFF?text=Carregando');"></div>
                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                 <button onclick="openHistoryModal()" class="absolute top-4 right-4 bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold hover:bg-white/30 transition">
                     <i class="fas fa-history mr-1"></i> Meus Agendamentos
@@ -61,37 +69,37 @@
             </div>
 
             <div class="px-6 -mt-10 relative shrink-0">
-                <img id="app-logo" src="https://placehold.co/100x100/eeeeee/333?text=Logo" class="w-20 h-20 rounded-xl border-4 border-white shadow-lg bg-white object-contain mx-auto">
+                <img id="app-logo" src="https://placehold.co/100x100/eeeeee/333?text=..." class="w-20 h-20 rounded-xl border-4 border-white shadow-lg bg-white object-contain mx-auto">
                 <div class="text-center mt-3">
-                    <h1 id="app-name" class="text-2xl font-bold text-gray-800">Carregando...</h1>
+                    <h1 id="app-name" class="text-2xl font-bold text-gray-800">...</h1>
                     <p id="app-desc" class="text-sm text-gray-500 mt-1">Agendamento Online</p>
                 </div>
             </div>
 
-            <div id="customer-notice-area" class="hidden px-6 mt-4">
+            <div id="customer-notice-area" class="hidden px-4 mt-4">
                 <div class="bg-blue-50 border-l-4 border-blue-500 p-3 text-sm text-blue-700 rounded-r shadow-sm">
                     <p id="customer-notice-text"></p>
                 </div>
             </div>
 
-            <form id="booking-form" class="p-6 space-y-5 flex-grow">
+            <form id="booking-form" class="p-4 sm:p-6 space-y-4 flex-grow">
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Seus Dados</label>
                     <div class="space-y-3">
                         <div class="relative">
-                            <i class="fas fa-user absolute left-3 top-3 text-gray-400"></i>
-                            <input type="text" id="fullName" placeholder="Nome Completo" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none theme-ring" required minlength="3">
+                            <i class="fas fa-user absolute left-3 top-3.5 text-gray-400"></i>
+                            <input type="text" id="fullName" placeholder="Nome Completo" class="w-full pl-10 pr-3 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none theme-ring text-sm sm:text-base" required minlength="3">
                         </div>
                         <div class="relative">
-                            <i class="fab fa-whatsapp absolute left-3 top-3 text-gray-400"></i>
-                            <input type="tel" id="phone" placeholder="WhatsApp (DDD + Número)" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none theme-ring" required oninput="formatPhone(this)" maxlength="15">
+                            <i class="fab fa-whatsapp absolute left-3 top-3.5 text-gray-400"></i>
+                            <input type="tel" id="phone" placeholder="WhatsApp (DDD + Número)" class="w-full pl-10 pr-3 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none theme-ring text-sm sm:text-base" required oninput="formatPhone(this)" maxlength="15">
                         </div>
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Data do Agendamento</label>
-                    <input type="date" id="bookingDate" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none theme-ring transition" required>
+                    <input type="date" id="bookingDate" class="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none theme-ring transition text-sm sm:text-base" required>
                 </div>
 
                 <div id="slots-container" class="hidden fade-in">
@@ -101,7 +109,7 @@
 
                 <div id="form-errors" class="text-red-500 text-sm text-center hidden"></div>
 
-                <button type="submit" id="submit-booking-btn" class="w-full bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-slate-900 transform transition disabled:opacity-50 disabled:cursor-not-allowed theme-bg" disabled>
+                <button type="submit" id="submit-booking-btn" class="w-full bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-slate-900 transform transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                     Confirmar Agendamento
                 </button>
             </form>
@@ -112,7 +120,7 @@
             </div>
         </div>
 
-        <!-- TELA CONFIRMAÇÃO (MODAL) -->
+        <!-- TELA CONFIRMAÇÃO -->
         <div id="confirmation-screen" class="hidden fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4 fade-in">
             <div class="bg-white w-full max-w-sm rounded-2xl p-8 shadow-2xl text-center relative">
                 <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 text-green-500 text-4xl shadow-sm mx-auto"><i class="fas fa-check"></i></div>
@@ -159,7 +167,6 @@
                      <button type="submit" id="login-btn" class="w-full py-3 text-white font-bold rounded-lg shadow transition flex items-center justify-center theme-bg hover:opacity-90">Entrar</button>
                  </form>
                  <button onclick="showScreen('form-screen')" class="w-full text-center text-sm text-gray-500">Voltar</button>
-                 <p id="login-error" class="text-center text-red-500 text-sm hidden"></p>
              </div>
         </div>
 
@@ -326,22 +333,26 @@
                 const data = await res.json();
                 if(data.error) throw new Error(data.error);
                 return data;
-            } catch (e) { console.error(e); return { error: e.message }; }
+            } catch (e) { throw e; } // Relança o erro para o chamador tratar
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            const settings = await callApi('getAppSettings');
-            appSettings = settings;
-            applySettings(settings);
-            if(settings.supportNumber) {
-                const btn = document.getElementById('float-support-btn');
-                btn.href = `https://wa.me/55${settings.supportNumber.replace(/\D/g,'')}`;
-                btn.classList.remove('hidden');
+            try {
+                const settings = await callApi('getAppSettings');
+                appSettings = settings;
+                applySettings(settings);
+                if(settings.supportNumber) {
+                    const btn = document.getElementById('float-support-btn');
+                    btn.href = `https://wa.me/55${settings.supportNumber.replace(/\D/g,'')}`;
+                    btn.classList.remove('hidden');
+                }
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.getElementById('app').classList.remove('hidden');
+                showScreen('form-screen');
+                setupEvents();
+            } catch (e) {
+                showCustomAlert('Erro Fatal', 'Não foi possível conectar ao servidor.', 'error');
             }
-            document.getElementById('loading-screen').classList.add('hidden');
-            document.getElementById('app').classList.remove('hidden');
-            showScreen('form-screen');
-            setupEvents();
         });
 
         function applySettings(s) {
@@ -378,11 +389,15 @@
             slotsDiv.innerHTML = '<div class="col-span-4 text-center"><div class="loader mx-auto"></div></div>';
             
             currentRequestDate = dateStr;
-            const slots = await callApi('getAvailableSlots', { dateString: dateStr });
-            if (dateStr !== currentRequestDate) return; 
-            
-            if (slots.length === 0) slotsDiv.innerHTML = '<p class="col-span-4 text-center text-xs text-gray-400 py-2">Sem horários disponíveis.</p>';
-            else slotsDiv.innerHTML = slots.map(t => `<button type="button" onclick="selectTime(this, '${t}')" class="slot-btn py-2 bg-gray-100 rounded text-sm font-bold text-gray-700 transition w-full">${t}</button>`).join('');
+            try {
+                const slots = await callApi('getAvailableSlots', { dateString: dateStr });
+                if (dateStr !== currentRequestDate) return; 
+                
+                if (slots.length === 0) slotsDiv.innerHTML = '<p class="col-span-4 text-center text-xs text-gray-400 py-2">Sem horários disponíveis.</p>';
+                else slotsDiv.innerHTML = slots.map(t => `<button type="button" onclick="selectTime(this, '${t}')" class="slot-btn py-2 bg-gray-100 rounded text-sm font-bold text-gray-700 transition w-full">${t}</button>`).join('');
+            } catch (e) {
+                slotsDiv.innerHTML = '<p class="col-span-4 text-center text-red-500 text-xs">Erro ao carregar.</p>';
+            }
         }
 
         function setPeriodType(type) {
@@ -489,7 +504,7 @@
                     showCustomAlert('Sucesso', 'Configurações salvas!');
                     setTimeout(() => location.reload(), 1500);
                 } catch(e) {
-                    showCustomAlert('Erro', 'Falha ao salvar.', 'error');
+                    showCustomAlert('Erro', 'Falha ao salvar: ' + e.message, 'error');
                     btn.innerHTML = 'Salvar Tudo'; btn.disabled = false;
                 }
             };
@@ -502,11 +517,14 @@
             const originalText = btn.innerHTML;
             btn.innerHTML = '<div class="btn-loader mx-auto"></div>';
             btn.disabled = true;
-            callApi('checkAdminLogin', {credentials:{username:u, password:p}}).then(res => {
+            try {
+                const res = await callApi('checkAdminLogin', {credentials:{username:u, password:p}});
                 if(res.success) { showScreen('admin-panel-screen'); currentPeriodType = 'monthly'; loadDashboard(); } 
                 else { showCustomAlert('Acesso Negado', res.message, 'error'); }
-                btn.innerHTML = originalText; btn.disabled = false;
-            });
+            } catch (err) {
+                showCustomAlert('Erro', 'Falha no login.', 'error');
+            }
+            btn.innerHTML = originalText; btn.disabled = false;
         }
 
         function selectTime(btn, time) {
@@ -529,15 +547,20 @@
             const btn = document.getElementById('submit-booking-btn');
             btn.innerHTML = 'Processando...'; btn.disabled = true;
             const data = { fullName: document.getElementById('fullName').value, phone: document.getElementById('phone').value, date: document.getElementById('bookingDate').value, time: selectedTime };
-            const res = await callApi('saveAppointment', { bookingData: data });
-            if (res.success) {
-                document.getElementById('confirm-name').textContent = data.fullName;
-                const d = data.date.split('-');
-                document.getElementById('confirm-date').textContent = `${d[2]}/${d[1]}/${d[0]}`;
-                document.getElementById('confirm-time').textContent = data.time;
-                document.getElementById('confirmation-screen').classList.remove('hidden');
-            } else { 
-                showCustomAlert('Erro', res.message, 'error'); 
+            try {
+                const res = await callApi('saveAppointment', { bookingData: data });
+                if (res.success) {
+                    document.getElementById('confirm-name').textContent = data.fullName;
+                    const d = data.date.split('-');
+                    document.getElementById('confirm-date').textContent = `${d[2]}/${d[1]}/${d[0]}`;
+                    document.getElementById('confirm-time').textContent = data.time;
+                    document.getElementById('confirmation-screen').classList.remove('hidden');
+                } else { 
+                    showCustomAlert('Atenção', res.message, 'error'); 
+                    btn.innerHTML = 'Confirmar Agendamento'; btn.disabled = false; 
+                }
+            } catch (err) {
+                showCustomAlert('Erro', 'Erro ao processar agendamento.', 'error');
                 btn.innerHTML = 'Confirmar Agendamento'; btn.disabled = false; 
             }
         }
@@ -563,18 +586,26 @@
         async function loadBlocks() {
             const list = document.getElementById('blocks-list');
             list.innerHTML = '<div class="flex justify-center p-4"><div class="loader"></div></div>';
-            const blocks = await callApi('getBlockedSlots');
-            if(!blocks || blocks.length === 0) list.innerHTML = '<p class="text-center text-gray-400 text-xs p-4">Sem bloqueios ativos.</p>';
-            else list.innerHTML = blocks.map(b => `<div class="px-4 py-3 flex justify-between items-center text-sm hover:bg-gray-50"><span class="font-bold text-gray-700">${b.date} <span class="font-normal text-gray-400 text-xs ml-2">${b.time || 'Dia Inteiro'}</span></span><button onclick="removeBlock(${b.row})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></div>`).join('');
+            try {
+                const blocks = await callApi('getBlockedSlots');
+                if(!blocks || blocks.length === 0) list.innerHTML = '<p class="text-center text-gray-400 text-xs p-4">Sem bloqueios ativos.</p>';
+                else list.innerHTML = blocks.map(b => `<div class="px-4 py-3 flex justify-between items-center text-sm hover:bg-gray-50"><span class="font-bold text-gray-700">${b.date} <span class="font-normal text-gray-400 text-xs ml-2">${b.time || 'Dia Inteiro'}</span></span><button onclick="removeBlock(${b.row})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></div>`).join('');
+            } catch (e) {
+                list.innerHTML = '<p class="text-center text-red-500 text-xs">Erro ao carregar.</p>';
+            }
         }
 
         async function addBlockSubmit(e) {
             e.preventDefault();
             const date = document.getElementById('block-date').value;
             const time = document.getElementById('block-time').value;
-            await callApi('addBlock', { blockData: { date, time } });
-            document.getElementById('block-form').reset(); loadBlocks();
-            showCustomAlert('Sucesso', 'Bloqueio adicionado!');
+            try {
+                await callApi('addBlock', { blockData: { date, time } });
+                document.getElementById('block-form').reset(); loadBlocks();
+                showCustomAlert('Sucesso', 'Bloqueio adicionado!');
+            } catch(e) {
+                showCustomAlert('Erro', 'Falha ao bloquear.', 'error');
+            }
         }
 
         async function removeBlock(row) { 
@@ -647,9 +678,13 @@
              const p = document.getElementById('history-phone').value;
              const l = document.getElementById('history-list');
              l.innerHTML = 'Carregando...';
-             const r = await callApi('getClientHistory', {phone: p});
-             if(r.success && r.history.length) l.innerHTML = r.history.map(i => `<div class="bg-gray-50 p-2 rounded border-l-4 border-slate-800 text-sm"><p class="font-bold">${i.date} - ${i.time}</p><p>${i.name}</p></div>`).join('');
-             else l.innerHTML = 'Nada encontrado.';
+             try {
+                 const r = await callApi('getClientHistory', {phone: p});
+                 if(r.success && r.history.length) l.innerHTML = r.history.map(i => `<div class="bg-gray-50 p-2 rounded border-l-4 border-slate-800 text-sm"><p class="font-bold">${i.date} - ${i.time}</p><p>${i.name}</p></div>`).join('');
+                 else l.innerHTML = 'Nada encontrado.';
+             } catch (e) {
+                 l.innerHTML = '<p class="text-red-500 text-center text-sm">Erro ao buscar.</p>';
+             }
         }
     </script>
 </body>
