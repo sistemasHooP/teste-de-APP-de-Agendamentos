@@ -31,39 +31,56 @@
         .admin-tab-inactive { color: #64748b; }
         .modal-backdrop { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); }
         
-        /* --- CORREÇÃO DE CSS PARA MOBILE --- */
+        /* --- CORREÇÃO CRÍTICA PARA IOS/IPHONE --- */
         
-        /* Aplica estilo "caixa grande" APENAS para inputs de texto, data, hora, select e textarea */
-        input:not([type="radio"]):not([type="checkbox"]), select, textarea { 
-            max-width: 100%; 
+        /* Reset total de aparência para evitar estilos nativos que quebram o layout */
+        input, select, textarea {
+            -webkit-appearance: none !important;
+            appearance: none !important;
+            border-radius: 0.5rem; /* Força borda arredondada igual em todos */
+            max-width: 100%;
             width: 100%;
-            box-sizing: border-box; 
+            box-sizing: border-box;
             min-height: 48px; /* Altura confortável para toque */
-        }
-        
-        /* Garante que Radio Buttons e Checkboxes tenham tamanho normal */
-        input[type="radio"], input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            min-height: auto;
-            margin-right: 8px;
-            cursor: pointer;
+            font-size: 16px !important; /* Evita zoom automático no iPhone ao clicar */
         }
 
-        /* Reset específico para campo de data no iOS */
-        input[type="date"] {
+        /* Exceção para checkbox e radio que precisam da aparência nativa ou customizada */
+        input[type="radio"], input[type="checkbox"] {
             -webkit-appearance: none;
             appearance: none;
-            min-width: 0;
-            display: block;
-            width: 100%;
+            min-height: auto;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ccc;
+            border-radius: 50%; /* Radio redondo */
+            display: inline-block;
+            position: relative;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        input[type="radio"]:checked {
+            border-color: var(--theme-color);
+            background-color: var(--theme-color);
+            box-shadow: inset 0 0 0 3px white;
+        }
+        input[type="checkbox"] {
+            border-radius: 4px; /* Checkbox quadrado */
+        }
+        input[type="checkbox"]:checked {
+            background-color: var(--theme-color);
+            border-color: var(--theme-color);
+            background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
         }
 
-        @media (max-width: 640px) {
-            input:not([type="radio"]):not([type="checkbox"]), select, textarea { 
-                padding-left: 0.75rem; 
-                padding-right: 0.75rem; 
-            }
+        /* Correção específica para campo de Data no iPhone */
+        input[type="date"] {
+            display: block;
+            background-color: #fff; /* Garante fundo branco */
+            /* Alinha o texto da data verticalmente */
+            line-height: 48px; 
+            padding-top: 0;
+            padding-bottom: 0;
         }
 
         @media print {
@@ -111,13 +128,18 @@
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Seus Dados</label>
                     <div class="space-y-3">
+                        <!-- CORREÇÃO DO ÍCONE: Usando Flex Container para centralizar perfeitamente -->
                         <div class="relative w-full">
-                            <i class="fas fa-user absolute left-3 top-3.5 text-gray-400 z-10"></i>
-                            <input type="text" id="fullName" placeholder="Nome Completo" class="w-full pl-10 pr-3 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none theme-ring text-sm sm:text-base" required minlength="3">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-user text-gray-400"></i>
+                            </div>
+                            <input type="text" id="fullName" placeholder="Nome Completo" class="w-full pl-10 pr-3 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none theme-ring text-base" required minlength="3">
                         </div>
                         <div class="relative w-full">
-                            <i class="fab fa-whatsapp absolute left-3 top-3.5 text-gray-400 z-10"></i>
-                            <input type="tel" id="phone" placeholder="WhatsApp (DDD + Número)" class="w-full pl-10 pr-3 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none theme-ring text-sm sm:text-base" required oninput="formatPhone(this)" maxlength="15">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fab fa-whatsapp text-gray-400 text-lg"></i>
+                            </div>
+                            <input type="tel" id="phone" placeholder="WhatsApp (DDD + Número)" class="w-full pl-10 pr-3 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none theme-ring text-base" required oninput="formatPhone(this)" maxlength="15">
                         </div>
                     </div>
                 </div>
@@ -125,7 +147,7 @@
                 <div class="w-full">
                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Data do Agendamento</label>
                     <div class="w-full overflow-hidden rounded-lg">
-                        <input type="date" id="bookingDate" class="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none theme-ring transition text-sm sm:text-base block" required>
+                        <input type="date" id="bookingDate" class="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none theme-ring transition text-base block" required>
                     </div>
                 </div>
 
@@ -240,13 +262,13 @@
                     </div>
                 </div>
 
-                <!-- ABA BLOQUEIOS (ATUALIZADA) -->
+                <!-- ABA BLOQUEIOS (ATUALIZADA E CORRIGIDA) -->
                 <div id="content-blocks" class="hidden space-y-4 fade-in">
                     <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                         <h3 class="font-bold text-gray-800 mb-4 text-sm">Gerenciar Bloqueios</h3>
                         
                         <form id="block-form" class="space-y-4">
-                            <!-- Tipo de Bloqueio -->
+                            <!-- Tipo de Bloqueio com botões nativos corrigidos -->
                             <div class="flex gap-4 mb-2 items-center">
                                 <label class="flex items-center gap-2 cursor-pointer">
                                     <input type="radio" name="blockType" value="specific" checked onchange="toggleBlockType()">
@@ -258,7 +280,7 @@
                                 </label>
                             </div>
 
-                            <!-- Data (some se for recorrente) -->
+                            <!-- Data (some se for recorrente) - Wrapper overflow hidden para não vazar -->
                             <div id="block-date-container" class="w-full overflow-hidden rounded-lg">
                                 <label class="text-xs text-gray-500 block mb-1">Data</label>
                                 <input type="date" id="block-date" class="w-full px-3 py-2 border rounded-lg bg-gray-50 outline-none theme-ring block">
