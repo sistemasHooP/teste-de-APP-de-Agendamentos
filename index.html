@@ -31,14 +31,25 @@
         .admin-tab-inactive { color: #64748b; }
         .modal-backdrop { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); }
         
-        /* CORREÇÃO CRÍTICA PARA INPUTS NO CELULAR */
-        input, select, textarea { 
+        /* --- CORREÇÃO DE CSS PARA MOBILE --- */
+        
+        /* Aplica estilo "caixa grande" APENAS para inputs de texto, data, hora, select e textarea */
+        input:not([type="radio"]):not([type="checkbox"]), select, textarea { 
             max-width: 100%; 
             width: 100%;
             box-sizing: border-box; 
             min-height: 48px; /* Altura confortável para toque */
         }
         
+        /* Garante que Radio Buttons e Checkboxes tenham tamanho normal */
+        input[type="radio"], input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            min-height: auto;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
         /* Reset específico para campo de data no iOS */
         input[type="date"] {
             -webkit-appearance: none;
@@ -49,7 +60,10 @@
         }
 
         @media (max-width: 640px) {
-            input, select, textarea { padding-left: 0.75rem; padding-right: 0.75rem; }
+            input:not([type="radio"]):not([type="checkbox"]), select, textarea { 
+                padding-left: 0.75rem; 
+                padding-right: 0.75rem; 
+            }
         }
 
         @media print {
@@ -233,14 +247,14 @@
                         
                         <form id="block-form" class="space-y-4">
                             <!-- Tipo de Bloqueio -->
-                            <div class="flex gap-4 mb-2">
+                            <div class="flex gap-4 mb-2 items-center">
                                 <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="blockType" value="specific" checked onchange="toggleBlockType()" class="text-slate-800">
+                                    <input type="radio" name="blockType" value="specific" checked onchange="toggleBlockType()">
                                     <span class="text-sm">Dia Específico</span>
                                 </label>
                                 <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="blockType" value="recurring" onchange="toggleBlockType()" class="text-slate-800">
-                                    <span class="text-sm font-bold text-red-500">Todos os Dias (Recorrente)</span>
+                                    <input type="radio" name="blockType" value="recurring" onchange="toggleBlockType()">
+                                    <span class="text-sm font-bold text-red-500">Todos os Dias</span>
                                 </label>
                             </div>
 
